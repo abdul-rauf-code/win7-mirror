@@ -5,17 +5,15 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Tools
+      - name: Download Authentic MSDN ISO from Reliable Mirror
         run: |
-          sudo apt-get update
-          sudo apt-get install -y aria2
-
-      - name: Download Authentic MSDN ISO
-        run: |
-          # Use single-connection aria2c with browser headers to avoid 403 HTML redirect
-          aria2c -x 2 -s 2 --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
-            --retry-wait=5 -m 10 -o win7.iso \
-            "https://archive.org/download/win-7-ult-sp1-x64-msdn/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
+          # Use curl with high retries against CDN mirrors that don't block GitHub IPs
+          curl -L -C - --retry 10 --retry-delay 5 \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
+            -o win7.iso "https://dl.bobony.com/MSDN/Windows%207/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso" || \
+          curl -L -C - --retry 10 --retry-delay 5 \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
+            -o win7.iso "https://archive.org/download/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332_202006/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
 
       - name: Verify ISO SHA-1 Checksum
         run: |
@@ -27,7 +25,7 @@ jobs:
           echo "Downloaded SHA1: $ACTUAL"
           echo "Expected SHA1:   $EXPECTED"
           if [ "$ACTUAL" != "$EXPECTED" ]; then
-            echo "❌ Downloaded file size/hash mismatch!"
+            echo "❌ Checksum mismatch!"
             exit 1
           fi
           echo "✅ Bit-Perfect MSDN Match Verified!"
