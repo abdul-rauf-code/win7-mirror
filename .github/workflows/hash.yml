@@ -1,0 +1,25 @@
+name: Compute Release Hashes
+
+on:
+  workflow_dispatch:
+
+jobs:
+  compute-hashes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Calculate Hashes from Release Assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download v1.0.0 --repo ${{ github.repository }} --dir assets
+          cd assets
+          echo "=== SHA-256 Checksums ===" > SHA256SUMS
+          sha256sum win7_part_* >> SHA256SUMS
+          echo "" >> SHA256SUMS
+          echo "=== Reassembled ISO SHA-1 ===" >> SHA256SUMS
+          cat win7_part_* > combined.iso
+          sha1sum combined.iso >> SHA256SUMS
+          rm combined.iso
+          gh release upload v1.0.0 SHA256SUMS --repo ${{ github.repository }} --clobber
