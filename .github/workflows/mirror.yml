@@ -7,23 +7,18 @@ jobs:
     steps:
       - name: Download ISO from Archive.org
         run: |
-          curl -L -C - --retry 10 --retry-delay 5 --retry-max-time 600 \
-            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
-            -o win7.iso "https://archive.org/download/Windows_7_Ultimate_SP1_x64_MSDN/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
+          curl -L -o win7.iso "https://archive.org/download/Windows_7_Ultimate_SP1_x64_MSDN/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
 
       - name: Verify ISO SHA-1 Checksum
         run: |
-          EXPECTED="66fefe594498e7b2e4e864386e73b50628cd1a07"
+          EXPECTED="36ae90defbad9d9539e649b193ae573b77a71c83"
           ACTUAL=$(sha1sum win7.iso | awk '{print $1}')
-          SIZE=$(stat -c%s win7.iso)
-          echo "File size downloaded: $SIZE bytes"
           echo "Downloaded ISO SHA-1: $ACTUAL"
-          echo "Expected ISO SHA-1:   $EXPECTED"
           if [ "$ACTUAL" != "$EXPECTED" ]; then
-            echo "❌ Downloaded ISO from Archive.org is corrupted!"
+            echo "❌ ISO Download failed or incomplete!"
             exit 1
           fi
-          echo "✅ ISO SHA-1 Verified Bit-Perfect!"
+          echo "✅ ISO SHA-1 Verified!"
 
       - name: Split ISO into 1.5GB Chunks
         run: |
