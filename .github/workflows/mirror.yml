@@ -5,15 +5,17 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
+      - name: Install Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y aria2
+
       - name: Download Authentic MSDN ISO
         run: |
-          # Try primary MSDN software preservation direct mirror
-          curl -L -C - --retry 10 --retry-delay 5 \
-            -o win7.iso "https://ia800902.us.archive.org/29/items/win-7-ult-sp1-x64-msdn/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso" || \
-          curl -L -C - --retry 10 --retry-delay 5 \
-            -o win7.iso "https://dl.bobony.com/MSDN/Windows%207/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso" || \
-          curl -L -C - --retry 10 --retry-delay 5 \
-            -o win7.iso "https://files.rg-adguard.net/dl/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
+          # Use single-connection aria2c with browser headers to avoid 403 HTML redirect
+          aria2c -x 2 -s 2 --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
+            --retry-wait=5 -m 10 -o win7.iso \
+            "https://archive.org/download/win-7-ult-sp1-x64-msdn/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
 
       - name: Verify ISO SHA-1 Checksum
         run: |
@@ -25,10 +27,10 @@ jobs:
           echo "Downloaded SHA1: $ACTUAL"
           echo "Expected SHA1:   $EXPECTED"
           if [ "$ACTUAL" != "$EXPECTED" ]; then
-            echo "❌ Downloaded ISO does not match MSDN reference SHA-1!"
+            echo "❌ Downloaded file size/hash mismatch!"
             exit 1
           fi
-          echo "✅ MSDN Bit-Perfect Match Verified!"
+          echo "✅ Bit-Perfect MSDN Match Verified!"
 
       - name: Split ISO into 1.5GB Chunks
         run: |
