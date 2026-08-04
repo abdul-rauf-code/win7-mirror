@@ -5,6 +5,11 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
+      - name: Install aria2
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y aria2
+
       - name: Download ISO from Archive.org
         run: |
           aria2c -x 16 -s 16 -j 16 -c --retries=15 --retry-wait=5 \
