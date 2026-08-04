@@ -5,14 +5,10 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
-      - name: Install aria2
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y aria2
-
       - name: Download ISO from Archive.org
         run: |
-          aria2c -x 16 -s 16 -j 16 -c --retries=15 --retry-wait=5 \
+          curl -L -C - --retry 10 --retry-delay 5 --retry-max-time 600 \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
             -o win7.iso "https://archive.org/download/Windows_7_Ultimate_SP1_x64_MSDN/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
 
       - name: Verify ISO SHA-1 Checksum
