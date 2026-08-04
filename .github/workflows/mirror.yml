@@ -1,23 +1,31 @@
 name: Mirror ISO to Release
 on: workflow_dispatch
 
-permissions:
-  contents: write
-
 jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
       - name: Download ISO from Archive.org
         run: |
-          curl -L -o win7.iso "https://archive.org/download/Windows_7_Ultimate_SP1_x64_MSDN/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
+          aria2c -x 16 -s 16 -o win7.iso "https://archive.org/download/Windows_7_Ultimate_SP1_x64_MSDN/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
+
+      - name: Verify ISO SHA-1 Checksum
+        run: |
+          EXPECTED="66fefe594498e7b2e4e864386e73b50628cd1a07"
+          ACTUAL=$(sha1sum win7.iso | awk '{print $1}')
+          echo "Downloaded ISO SHA-1: $ACTUAL"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "❌ Downloaded ISO from Archive.org is corrupted!"
+            exit 1
+          fi
+          echo "✅ ISO SHA-1 Verified Bit-Perfect!"
 
       - name: Split ISO into 1.5GB Chunks
         run: |
           split -b 1500M -d win7.iso win7_part_
 
       - name: Create Release and Upload Assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.0
           name: Windows 7 ISO Mirror
