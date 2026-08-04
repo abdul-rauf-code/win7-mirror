@@ -7,13 +7,17 @@ jobs:
     steps:
       - name: Download ISO from Archive.org
         run: |
-          aria2c -x 16 -s 16 -o win7.iso "https://archive.org/download/Windows_7_Ultimate_SP1_x64_MSDN/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
+          aria2c -x 16 -s 16 -j 16 -c --retries=15 --retry-wait=5 \
+            -o win7.iso "https://archive.org/download/Windows_7_Ultimate_SP1_x64_MSDN/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
 
       - name: Verify ISO SHA-1 Checksum
         run: |
           EXPECTED="66fefe594498e7b2e4e864386e73b50628cd1a07"
           ACTUAL=$(sha1sum win7.iso | awk '{print $1}')
+          SIZE=$(stat -c%s win7.iso)
+          echo "File size downloaded: $SIZE bytes"
           echo "Downloaded ISO SHA-1: $ACTUAL"
+          echo "Expected ISO SHA-1:   $EXPECTED"
           if [ "$ACTUAL" != "$EXPECTED" ]; then
             echo "❌ Downloaded ISO from Archive.org is corrupted!"
             exit 1
