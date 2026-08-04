@@ -1,6 +1,9 @@
 name: Mirror ISO to Release
 on: workflow_dispatch
 
+permissions:
+  contents: write
+
 jobs:
   mirror:
     runs-on: ubuntu-latest
@@ -14,7 +17,7 @@ jobs:
           split -b 1500M -d win7.iso win7_part_
 
       - name: Create Release and Upload Assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.0
           name: Windows 7 ISO Mirror
