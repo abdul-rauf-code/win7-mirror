@@ -1,0 +1,23 @@
+name: Mirror ISO to Release
+on: workflow_dispatch
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download ISO from Archive.org
+        run: |
+          curl -L -o win7.iso "https://archive.org/download/Windows_7_Ultimate_SP1_x64_MSDN/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
+
+      - name: Split ISO into 1.5GB Chunks
+        run: |
+          split -b 1500M -d win7.iso win7_part_
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.0
+          name: Windows 7 ISO Mirror
+          files: win7_part_*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
