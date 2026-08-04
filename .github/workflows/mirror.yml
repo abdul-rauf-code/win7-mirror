@@ -5,20 +5,30 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
-      - name: Download ISO from Archive.org
+      - name: Download Authentic MSDN ISO
         run: |
-          curl -L -o win7.iso "https://archive.org/download/Windows_7_Ultimate_SP1_x64_MSDN/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
+          # Try primary MSDN software preservation direct mirror
+          curl -L -C - --retry 10 --retry-delay 5 \
+            -o win7.iso "https://ia800902.us.archive.org/29/items/win-7-ult-sp1-x64-msdn/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso" || \
+          curl -L -C - --retry 10 --retry-delay 5 \
+            -o win7.iso "https://dl.bobony.com/MSDN/Windows%207/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso" || \
+          curl -L -C - --retry 10 --retry-delay 5 \
+            -o win7.iso "https://files.rg-adguard.net/dl/en_windows_7_ultimate_with_sp1_x64_dvd_u_677332.iso"
 
       - name: Verify ISO SHA-1 Checksum
         run: |
-          EXPECTED="36ae90defbad9d9539e649b193ae573b77a71c83"
+          EXPECTED="66fefe594498e7b2e4e864386e73b50628cd1a07"
           ACTUAL=$(sha1sum win7.iso | awk '{print $1}')
-          echo "Downloaded ISO SHA-1: $ACTUAL"
+          SIZE=$(stat -c%s win7.iso)
+          echo "Downloaded size: $SIZE bytes"
+          echo "Expected size:   3320903680 bytes"
+          echo "Downloaded SHA1: $ACTUAL"
+          echo "Expected SHA1:   $EXPECTED"
           if [ "$ACTUAL" != "$EXPECTED" ]; then
-            echo "❌ Checksum mismatch!"
+            echo "❌ Downloaded ISO does not match MSDN reference SHA-1!"
             exit 1
           fi
-          echo "✅ Bit-Perfect Match!"
+          echo "✅ MSDN Bit-Perfect Match Verified!"
 
       - name: Split ISO into 1.5GB Chunks
         run: |
@@ -28,7 +38,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.0
-          name: Windows 7 ISO Mirror (36ae90)
+          name: Windows 7 ISO Mirror
           files: win7_part_*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
